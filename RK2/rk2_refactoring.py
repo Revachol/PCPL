@@ -57,65 +57,57 @@ comp_micros = [
 ]
 
 
-def one_to_many_relationship():
-    """Создает связь один-ко-многим: выводит все компьютеры для каждого процессора"""
+def one_to_many_relationship(computers, microprocessors):
+    """Создает связь один-ко-многим"""
     return [(m.model, c.name)
             for m in microprocessors
             for c in computers
             if c.micro_id == m.id]
 
 
-def many_to_many_relationship():
-    """Создает связь многие-ко-многим между компьютерами и микропроцессорами"""
-    many_to_many_temp = [(m.model, c.name, c.price)
-                         for m in microprocessors
-                         for cm in comp_micros
-                         for c in computers
-                         if cm.micro_id == m.id and cm.comp_id == c.id]
+def many_to_many_relationship(computers, microprocessors, comp_micros):
+    """Создает связь многие-ко-многим"""
+    return [(m.model, c.name, c.price)
+            for m in microprocessors
+            for cm in comp_micros
+            for c in computers
+            if cm.micro_id == m.id and cm.comp_id == c.id]
 
-    return many_to_many_temp
-
-def task_A1():
+def task_A1(computers, microprocessors):
     """Задание A1: Список всех компьютеров для каждого микропроцессора"""
-    one_to_many = one_to_many_relationship()
+    one_to_many = one_to_many_relationship(computers, microprocessors)
     result = {}
     for model, comp_name in one_to_many:
         result.setdefault(model, []).append(comp_name)
     return result
 
-def task_A2():
+def task_A2(computers, microprocessors, comp_micros):
     """Задание A2: Суммарная стоимость всех компьютеров, использующих каждый микропроцессор"""
-    many_to_many = many_to_many_relationship()
-    result = []
-    for m in microprocessors:
-        m_computers = list(filter(lambda x: x[0] == m.model, many_to_many))
-        total_price = sum(comp_price for _, _, comp_price in m_computers)
-        result.append((m.model, total_price))
+    many_to_many = many_to_many_relationship(computers, microprocessors, comp_micros)
+    result = [
+        (m.model, sum(comp_price for _, _, comp_price in filter(lambda x: x[0] == m.model, many_to_many)))
+        for m in microprocessors
+    ]
+    return sorted(result, key=itemgetter(1), reverse=True)
 
-    result = sorted(result, key=itemgetter(1), reverse=True)
-    for model, total in result:
-        print(f"{model}: {total} Руб")
-
-def task_A3(keyword):
+def task_A3(computers, microprocessors, comp_micros, keyword):
     """Задание A3: Вывод всех процессоров с определенным словом и их компьютеров"""
-    many_to_many = many_to_many_relationship()
+    many_to_many = many_to_many_relationship(computers, microprocessors, comp_micros)
     result = {}
     for model, comp_name, _ in many_to_many:
         if keyword.lower() in model.lower():
-            if model in result:
-                result[model].append(comp_name)
-            else:
-                result[model] = [comp_name]
-
-    for model, comps in result.items():
-        print(f"{model}: {', '.join(comps)}")
+            result.setdefault(model, []).append(comp_name)
+    return result
 
 if __name__ == '__main__':
     print('Задание A1')
-    task_A1()
+    for model, comps in task_A1(computers, microprocessors).items():
+        print(f"{model}: {', '.join(comps)}")
 
     print('\nЗадание A2')
-    task_A2()
+    for model, total in task_A2(computers, microprocessors, comp_micros):
+        print(f"{model}: {total} Руб")
 
     print('\nЗадание A3')
-    task_A3('Intel')
+    for model, comps in task_A3(computers, microprocessors, comp_micros, 'Intel').items():
+        print(f"{model}: {', '.join(comps)}")
